@@ -67,15 +67,17 @@ class Patient {
             error_log("Search term: '$search_term'");
             error_log("Search pattern: '$search'");
             
-            $stmt = $this->db->prepare("
+            // Using prepared statement with named parameters - be careful with MySQL
+            $sql = "
                 SELECT id, first_name, last_name, date_of_birth, gender, medical_record_number, created_at
                 FROM patients 
-                WHERE first_name LIKE :search OR last_name LIKE :search OR medical_record_number LIKE :search
+                WHERE first_name LIKE ? OR last_name LIKE ? OR medical_record_number LIKE ?
                 ORDER BY first_name, last_name ASC
                 LIMIT 50
-            ");
+            ";
             
-            $exec_result = $stmt->execute([':search' => $search]);
+            $stmt = $this->db->prepare($sql);
+            $exec_result = $stmt->execute([$search, $search, $search]);
             error_log("Execute result: " . ($exec_result ? 'true' : 'false'));
             
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -91,6 +93,7 @@ class Patient {
             return $results;
         } catch (PDOException $e) {
             error_log("Patient Search Error: " . $e->getMessage());
+            error_log("Error code: " . $e->getCode());
             return [];
         }
     }
