@@ -420,6 +420,45 @@
                         cancerDetailsSection.style.display = 'none';
                     }
                 });
+
+                // Handle form submission with AJAX
+                document.getElementById('outcomeForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Show loading state
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '⏳ Saving...';
+                    
+                    // Collect form data
+                    const formData = new FormData(this);
+                    
+                    // Send AJAX request
+                    fetch('/CANCER/index.php?page=api-outcome-action', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message and redirect
+                            alert('✅ Outcome recorded successfully!\n\nRedirecting to dashboard...');
+                            window.location.href = '/CANCER/index.php?page=doctor-dashboard';
+                        } else {
+                            // Show error message
+                            alert('❌ Error: ' + (data.message || 'Failed to save outcome'));
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('❌ An error occurred while saving. Please try again.');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    });
+                });
                 </script>
             </section>
         </div>

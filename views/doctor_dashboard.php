@@ -76,10 +76,10 @@
                 </div>
 
                 <!-- Pending Outcomes Panel -->
-                <div class="panel panel-warning" style="margin-bottom: 30px; border-left: 4px solid #ff9800;">
-                    <div class="panel-header" style="background-color: #fff3e0;">
-                        <h3>⏳ Assessments Pending Outcome Recording</h3>
-                        <p class="panel-description">Assessments awaiting your diagnosis and treatment plan</p>
+                <div class="panel panel-warning" style="margin-bottom: 30px; border-left: 4px solid #ff9800; background-color: #fffbf0; box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);">
+                    <div class="panel-header" style="background-color: #fff3e0; border-bottom: 2px solid #ff9800;">
+                        <h3 style="margin: 0; color: #f57c00;">⏳ Assessments Pending Outcome Recording</h3>
+                        <p class="panel-description" style="margin: 5px 0 0 0; color: #d84315;">Assessments awaiting your diagnosis and treatment plan</p>
                     </div>
                     <div class="panel-body">
                         <table class="data-table">
