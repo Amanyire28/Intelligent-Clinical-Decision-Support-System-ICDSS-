@@ -147,34 +147,48 @@ class AssessmentController {
     public function getPatientAssessmentsAPI() {
         header('Content-Type: application/json');
         
+        error_log("=== GET PATIENT ASSESSMENTS API START ===");
+        error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
+        error_log("POST data: " . print_r($_POST, true));
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("Invalid request method");
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
             exit;
         }
         
         $patient_id = intval($_POST['patient_id'] ?? 0);
+        error_log("Patient ID: " . $patient_id);
         
         if ($patient_id <= 0) {
+            error_log("Invalid patient ID");
             echo json_encode(['success' => false, 'assessments' => []]);
             exit;
         }
         
         try {
+            error_log("Fetching assessments for patient $patient_id");
             $assessments = $this->assessmentModel->getPatientAssessments($patient_id);
+            error_log("Found " . count($assessments) . " assessments");
             
             // Enhance with outcome status
             if (!empty($assessments)) {
-                foreach ($assessments as &$assessment) {
+                foreach ($assessments as $key => $assessment) {
+                    error_log("Checking outcome for assessment " . $assessment['id']);
                     // Check if outcome is recorded
                     $outcome = $this->getAssessmentOutcome($assessment['id']);
-                    $assessment['outcome_status'] = $outcome ? 'recorded' : 'pending';
+                    $assessments[$key]['outcome_status'] = $outcome ? 'recorded' : 'pending';
+                    error_log("  Outcome status: " . ($outcome ? 'recorded' : 'pending'));
                 }
             }
             
+            error_log("=== GET PATIENT ASSESSMENTS API END - SUCCESS ===");
             echo json_encode(['success' => true, 'assessments' => $assessments]);
         } catch (Exception $e) {
             error_log("Get patient assessments error: " . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'Failed to load assessments', 'assessments' => []]);
+            error_log("Stack trace: " . $e->getTraceAsString());
+            error_log("=== GET PATIENT ASSESSMENTS API END - ERROR ===");
+            echo json_encode(['success' => false, 'message' => 'Failed to load assessments: ' . $e->getMessage(), 'assessments' => []]);
         }
         exit;
     }
@@ -184,16 +198,20 @@ class AssessmentController {
      */
     private function getAssessmentOutcome($assessment_id) {
         try {
+            error_log("  getAssessmentOutcome: checking for assessment_id=$assessment_id");
             $stmt = $this->db->prepare("
                 SELECT id FROM patient_outcomes 
-                WHERE assessment_id = :assessment_id 
+                WHERE assessment_id = ?
                 LIMIT 1
             ");
-            $stmt->bindValue(':assessment_id', $assessment_id, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetch();
+            $result = $stmt->execute([$assessment_id]);
+            error_log("  getAssessmentOutcome: execute result = " . ($result ? 'true' : 'false'));
+            
+            $outcome = $stmt->fetch();
+            error_log("  getAssessmentOutcome: found = " . ($outcome ? 'yes' : 'no'));
+            return $outcome;
         } catch (Exception $e) {
-            error_log("Error checking assessment outcome: " . $e->getMessage());
+            error_log("  getAssessmentOutcome: Error - " . $e->getMessage());
             return null;
         }
     }

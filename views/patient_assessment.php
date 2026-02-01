@@ -801,6 +801,7 @@
 
             // Fetch patient assessments
             try {
+                console.log('selectPatient called for patient ' + patientId);
                 const response = await fetch('/CANCER/index.php?page=api-patient-assessments', {
                     method: 'POST',
                     headers: {
@@ -809,7 +810,16 @@
                     body: 'patient_id=' + patientId
                 });
 
+                console.log('Response status: ' + response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
+
+                // Check if API returned success
+                if (!data.success) {
+                    console.error('API returned error: ' + (data.message || 'Unknown error'));
+                    alert('Error loading patient history: ' + (data.message || 'Unknown error'));
+                    return;
+                }
 
                 // Populate patient info
                 document.getElementById('patientDisplayName').textContent = `${firstName} ${lastName}`;
@@ -831,9 +841,11 @@
                 document.getElementById('gender').disabled = true;
 
                 // Display assessment history
-                if (data.success && data.assessments.length > 0) {
+                if (data.assessments && data.assessments.length > 0) {
+                    console.log('Found ' + data.assessments.length + ' assessments');
                     displayAssessmentHistory(data.assessments);
                 } else {
+                    console.log('No assessments found');
                     document.getElementById('previousAssessmentsContainer').innerHTML = 
                         '<p class="no-history-message">No previous assessments found for this patient.</p>';
                 }
@@ -848,7 +860,7 @@
                 window.scrollTo(0, 0);
             } catch (error) {
                 console.error('Error fetching assessments:', error);
-                alert('Error loading patient history. Please try again.');
+                alert('Error loading patient history: ' + error.message);
             }
         }
 
