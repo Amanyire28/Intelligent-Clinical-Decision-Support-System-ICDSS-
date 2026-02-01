@@ -122,7 +122,10 @@
                         <div class="panel-body">
                             <div class="recommendation-box">
                                 <div class="recommendation-content">
-                                    <p><?php echo htmlspecialchars($risk_result['clinical_recommendation'] ?? 'Continue standard monitoring protocol.'); ?></p>
+                                    <?php 
+                                        $recommendation = $risk_result['clinical_recommendation'] ?? 'Continue standard monitoring protocol.';
+                                        echo nl2br(htmlspecialchars($recommendation));
+                                    ?>
                                 </div>
                             </div>
 
@@ -134,7 +137,7 @@
                                         <h5>Primary Factors (High Impact):</h5>
                                         <ul class="factor-items">
                                             <?php 
-                                                $primary = explode(',', $risk_result['primary_factors'] ?? '');
+                                                $primary = explode(';', $risk_result['primary_factors'] ?? '');
                                                 foreach ($primary as $factor) {
                                                     if (trim($factor)) {
                                                         echo '<li>' . htmlspecialchars(trim($factor)) . '</li>';
@@ -147,7 +150,7 @@
                                         <h5>Secondary Factors (Moderate Impact):</h5>
                                         <ul class="factor-items">
                                             <?php 
-                                                $secondary = explode(',', $risk_result['secondary_factors'] ?? '');
+                                                $secondary = explode(';', $risk_result['secondary_factors'] ?? '');
                                                 foreach ($secondary as $factor) {
                                                     if (trim($factor)) {
                                                         echo '<li>' . htmlspecialchars(trim($factor)) . '</li>';

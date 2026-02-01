@@ -17,6 +17,7 @@ require_once __DIR__ . '/config/db_config.php';
 require_once __DIR__ . '/models/Assessment.php';
 require_once __DIR__ . '/models/Patient.php';
 require_once __DIR__ . '/models/RiskResult.php';
+require_once __DIR__ . '/models/RiskScoringEngine.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -71,19 +72,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $assessment_id = $assessmentModel->createAssessment($patient_id, $_SESSION['user_id'], $assessmentData);
         
         if ($assessment_id) {
-            // Create placeholder risk result (Phase 4 will replace with actual risk engine)
+            // Calculate risk using RiskScoringEngine
+            $riskCalculation = RiskScoringEngine::calculateRisk($assessmentData);
+            
+            // Create risk result with calculated values
             $riskResultModel->createRiskResult(
                 $assessment_id,
-                65,  // Placeholder risk score (0-100)
-                'moderate',  // Placeholder risk level
-                75,  // Placeholder confidence
-                'Sore throat symptoms present',  // Primary factors
-                'Family history noted',  // Secondary factors
-                'Further clinical evaluation recommended'  // Recommendation
+                $riskCalculation['risk_score'],
+                strtolower($riskCalculation['risk_level']),
+                $riskCalculation['confidence'],
+                $riskCalculation['primary_factors'],
+                $riskCalculation['secondary_factors'],
+                $riskCalculation['recommendation']
             );
             
             // Log the assessment creation
-            logSystemAction($_SESSION['user_id'], 'Assessment Created', 'Assessment', $assessment_id, 'New patient assessment created');
+            logSystemAction($_SESSION['user_id'], 'Assessment Created', 'Assessment', $assessment_id, 'New patient assessment created - Risk Level: ' . $riskCalculation['risk_level']);
             
             // Redirect to results page
             header('Location: index.php?page=assessment-results&id=' . $assessment_id);
