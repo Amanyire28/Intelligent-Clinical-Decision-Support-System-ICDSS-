@@ -10,18 +10,21 @@ require_once __DIR__ . '/../config/db_config.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Assessment.php';
 require_once __DIR__ . '/../models/RiskResult.php';
+require_once __DIR__ . '/../models/PatientOutcome.php';
 
 class AdminController {
     private $db;
     private $userModel;
     private $assessmentModel;
     private $riskResultModel;
+    private $outcomeModel;
     
     public function __construct() {
         $this->db = getDBConnection();
         $this->userModel = new User($this->db);
         $this->assessmentModel = new Assessment($this->db);
         $this->riskResultModel = new RiskResult($this->db);
+        $this->outcomeModel = new PatientOutcome($this->db);
     }
     
     /**
@@ -497,6 +500,193 @@ class AdminController {
         } catch (Exception $e) {
             error_log("Get User Error: " . $e->getMessage());
             return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Manage patient outcomes - for recording diagnosis and treatment data
+     */
+    public function manageOutcomes() {
+        // Get current user
+        $current_user = [
+            'id' => $_SESSION['user_id'],
+            'full_name' => $_SESSION['user_name']
+        ];
+        
+        // Get assessments pending outcome recording
+        $pendingOutcomes = $this->getPendingOutcomes();
+        
+        // Get outcome statistics
+        $outcomeStats = $this->outcomeModel->getCohortStatistics();
+        
+        // Include outcome management view
+        include __DIR__ . '/../views/admin_outcomes.php';
+    }
+    
+    /**
+     * Handle outcome recording via AJAX
+     */
+    public function handleOutcomeAction() {
+        header('Content-Type: application/json');
+        
+        $action = $_POST['action'] ?? null;
+        $result = [];
+        
+        try {
+            switch ($action) {
+                case 'record':
+                    $result = $this->recordOutcome();
+                    break;
+                case 'update':
+                    $result = $this->updateOutcome();
+                    break;
+                case 'get':
+                    $result = $this->getOutcome();
+                    break;
+                default:
+                    $result = ['success' => false, 'message' => 'Invalid action'];
+            }
+        } catch (Exception $e) {
+            $result = ['success' => false, 'message' => $e->getMessage()];
+            error_log("Outcome Action Error: " . $e->getMessage());
+        }
+        
+        echo json_encode($result);
+        exit;
+    }
+    
+    /**
+     * Record a new patient outcome
+     */
+    private function recordOutcome() {
+        $assessment_id = isset($_POST['assessment_id']) ? intval($_POST['assessment_id']) : null;
+        
+        if (!$assessment_id) {
+            return ['success' => false, 'message' => 'Assessment ID required'];
+        }
+        
+        // Get assessment to find patient_id
+        $assessment = $this->assessmentModel->getAssessmentById($assessment_id);
+        if (!$assessment) {
+            return ['success' => false, 'message' => 'Assessment not found'];
+        }
+        
+        $outcomeData = [
+            'final_diagnosis' => $_POST['final_diagnosis'] ?? null,
+            'cancer_stage' => $_POST['cancer_stage'] ?? null,
+            'cancer_type' => $_POST['cancer_type'] ?? null,
+            'treatment_type' => $_POST['treatment_type'] ?? null,
+            'outcome_date' => $_POST['outcome_date'] ?? date('Y-m-d'),
+            'follow_up_status' => $_POST['follow_up_status'] ?? null,
+            'survival_status' => $_POST['survival_status'] ?? 'Alive',
+            'years_survived' => $_POST['years_survived'] ?? null,
+            'notes' => $_POST['notes'] ?? null
+        ];
+        
+        $outcomeId = $this->outcomeModel->recordOutcome($assessment['patient_id'], $assessment_id, $outcomeData);
+        
+        if ($outcomeId) {
+            logSystemAction(
+                $_SESSION['user_id'],
+                'Outcome Recorded',
+                'PatientOutcome',
+                $outcomeId,
+                'Assessment ' . $assessment_id . ' - Diagnosis: ' . ($outcomeData['final_diagnosis'] ?? 'Unknown')
+            );
+            return ['success' => true, 'message' => 'Outcome recorded successfully', 'outcome_id' => $outcomeId];
+        } else {
+            return ['success' => false, 'message' => 'Failed to record outcome'];
+        }
+    }
+    
+    /**
+     * Update existing outcome
+     */
+    private function updateOutcome() {
+        $outcome_id = isset($_POST['outcome_id']) ? intval($_POST['outcome_id']) : null;
+        
+        if (!$outcome_id) {
+            return ['success' => false, 'message' => 'Outcome ID required'];
+        }
+        
+        $outcomeData = [];
+        $allowedFields = ['final_diagnosis', 'cancer_stage', 'cancer_type', 'treatment_type',
+                         'outcome_date', 'follow_up_status', 'survival_status', 'years_survived', 'notes'];
+        
+        foreach ($allowedFields as $field) {
+            if (isset($_POST[$field])) {
+                $outcomeData[$field] = $_POST[$field];
+            }
+        }
+        
+        if (empty($outcomeData)) {
+            return ['success' => false, 'message' => 'No fields to update'];
+        }
+        
+        $success = $this->outcomeModel->updateOutcome($outcome_id, $outcomeData);
+        
+        if ($success) {
+            logSystemAction(
+                $_SESSION['user_id'],
+                'Outcome Updated',
+                'PatientOutcome',
+                $outcome_id,
+                'Updated outcome data'
+            );
+            return ['success' => true, 'message' => 'Outcome updated successfully'];
+        } else {
+            return ['success' => false, 'message' => 'Failed to update outcome'];
+        }
+    }
+    
+    /**
+     * Get outcome data for editing
+     */
+    private function getOutcome() {
+        $outcome_id = isset($_POST['outcome_id']) ? intval($_POST['outcome_id']) : null;
+        
+        if (!$outcome_id) {
+            return ['success' => false, 'message' => 'Outcome ID required'];
+        }
+        
+        $stmt = $this->db->prepare("SELECT * FROM patient_outcomes WHERE id = :id");
+        $stmt->execute([':id' => $outcome_id]);
+        $outcome = $stmt->fetch();
+        
+        if ($outcome) {
+            return ['success' => true, 'outcome' => $outcome];
+        } else {
+            return ['success' => false, 'message' => 'Outcome not found'];
+        }
+    }
+    
+    /**
+     * Get assessments without outcome records
+     */
+    private function getPendingOutcomes($limit = 50) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT a.id, a.assessment_date,
+                       p.first_name, p.last_name,
+                       u.full_name as doctor_name,
+                       rr.risk_level, rr.risk_score,
+                       po.id as outcome_id
+                FROM assessments a
+                JOIN patients p ON a.patient_id = p.id
+                JOIN users u ON a.doctor_id = u.id
+                LEFT JOIN risk_results rr ON a.id = rr.assessment_id
+                LEFT JOIN patient_outcomes po ON a.id = po.assessment_id
+                WHERE po.id IS NULL
+                ORDER BY a.assessment_date DESC
+                LIMIT :limit
+            ");
+            
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Get Pending Outcomes Error: " . $e->getMessage());
+            return [];
         }
     }
 }

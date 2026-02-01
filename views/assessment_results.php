@@ -165,6 +165,36 @@
                     </div>
                 </div>
 
+                <!-- PATIENT HISTORY COMPARISON ANALYSIS (NEW) -->
+                <?php 
+                    // Check if comparison data is available in clinical_recommendation
+                    // The RiskComparisonEngine outputs insights in clinical_recommendation
+                    $isComparison = strpos($risk_result['clinical_recommendation'] ?? '', 'WORSENING') !== false ||
+                                   strpos($risk_result['clinical_recommendation'] ?? '', 'IMPROVING') !== false ||
+                                   strpos($risk_result['clinical_recommendation'] ?? '', 'STABLE') !== false;
+                ?>
+                
+                <?php if ($isComparison): ?>
+                <div class="panel panel-comparison" style="border-left: 5px solid #ff9800;">
+                    <div class="panel-header">
+                        <h3>📈 Comparison with Patient History</h3>
+                        <p class="panel-description">Analysis based on previous assessments</p>
+                    </div>
+                    <div class="panel-body">
+                        <div class="comparison-insights">
+                            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; line-height: 1.8;">
+                                <?php 
+                                    // Display the multi-line insights
+                                    $insights = $risk_result['clinical_recommendation'];
+                                    // Remove HTML tags and display as formatted text
+                                    echo nl2br(htmlspecialchars($insights));
+                                ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- Detailed Assessment Data -->
                 <div class="panel panel-secondary">
                     <div class="panel-header">

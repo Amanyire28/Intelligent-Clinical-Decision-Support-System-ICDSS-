@@ -18,6 +18,7 @@ require_once __DIR__ . '/models/Assessment.php';
 require_once __DIR__ . '/models/Patient.php';
 require_once __DIR__ . '/models/RiskResult.php';
 require_once __DIR__ . '/models/RiskScoringEngine.php';
+require_once __DIR__ . '/models/RiskComparisonEngine.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -75,19 +76,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Calculate risk using RiskScoringEngine
             $riskCalculation = RiskScoringEngine::calculateRisk($assessmentData);
             
-            // Create risk result with calculated values
-            $riskResultModel->createRiskResult(
-                $assessment_id,
+            // Get patient's previous assessments for comparison
+            $previousAssessments = $assessmentModel->getPatientAssessments($patient_id);
+            
+            // Enhance risk score with historical context using RiskComparisonEngine
+            $enhancedRisk = RiskComparisonEngine::analyzeWithHistory(
+                $assessmentData,
                 $riskCalculation['risk_score'],
-                strtolower($riskCalculation['risk_level']),
-                $riskCalculation['confidence'],
-                $riskCalculation['primary_factors'],
-                $riskCalculation['secondary_factors'],
-                $riskCalculation['recommendation']
+                $previousAssessments
             );
             
-            // Log the assessment creation
-            logSystemAction($_SESSION['user_id'], 'Assessment Created', 'Assessment', $assessment_id, 'New patient assessment created - Risk Level: ' . $riskCalculation['risk_level']);
+            // Create risk result with enhanced values
+            $riskResultModel->createRiskResult(
+                $assessment_id,
+                $enhancedRisk['adjusted_risk_score'],
+                strtolower($enhancedRisk['adjusted_risk_level']),
+                $enhancedRisk['confidence'],
+                $enhancedRisk['comparison_data']['primary_factors'] ?? $riskCalculation['primary_factors'],
+                $enhancedRisk['comparison_data']['secondary_factors'] ?? $riskCalculation['secondary_factors'],
+                $enhancedRisk['insights']  // Now includes comparison insights
+            );
+            
+            // Log the assessment creation with trend information
+            $trendLog = $enhancedRisk['has_history'] 
+                ? " - Trend: {$enhancedRisk['trend_direction']}, Change: {$enhancedRisk['score_change_percent']}%"
+                : " - First assessment (baseline)";
+            logSystemAction(
+                $_SESSION['user_id'], 
+                'Assessment Created', 
+                'Assessment', 
+                $assessment_id, 
+                'Risk Level: ' . $enhancedRisk['adjusted_risk_level'] . ', Score: ' . $enhancedRisk['adjusted_risk_score'] . $trendLog
+            );
             
             // Redirect to results page
             header('Location: index.php?page=assessment-results&id=' . $assessment_id);

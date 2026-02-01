@@ -144,6 +144,27 @@ switch ($page) {
         $controller->handleUserAction();
         break;
     
+    case 'admin-outcomes':
+        if ($_SESSION['user_role'] !== 'admin') {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        require_once __DIR__ . '/controllers/AdminController.php';
+        $controller = new AdminController();
+        $controller->manageOutcomes();
+        break;
+    
+    case 'api-outcome-action':
+        if ($_SESSION['user_role'] !== 'admin') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+        require_once __DIR__ . '/controllers/AdminController.php';
+        $controller = new AdminController();
+        $controller->handleOutcomeAction();
+        break;
+    
     case 'logout':
         session_destroy();
         header('Location: index.php?page=login');
