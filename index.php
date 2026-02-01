@@ -165,6 +165,30 @@ switch ($page) {
         $controller->handleOutcomeAction();
         break;
     
+    case 'api-patient-search':
+        // Doctors can search for patients
+        if ($_SESSION['user_role'] !== 'doctor' && $_SESSION['user_role'] !== 'admin') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+        require_once __DIR__ . '/controllers/PatientController.php';
+        $controller = new PatientController();
+        $controller->searchPatientAPI();
+        break;
+    
+    case 'api-patient-assessments':
+        // Doctors can view patient assessments
+        if ($_SESSION['user_role'] !== 'doctor' && $_SESSION['user_role'] !== 'admin') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+        require_once __DIR__ . '/controllers/AssessmentController.php';
+        $controller = new AssessmentController();
+        $controller->getPatientAssessmentsAPI();
+        break;
+    
     case 'logout':
         session_destroy();
         header('Location: index.php?page=login');

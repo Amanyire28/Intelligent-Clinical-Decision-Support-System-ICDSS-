@@ -139,6 +139,64 @@ class AssessmentController {
         echo json_encode(['error' => $message]);
         exit;
     }
+    
+    /**
+     * API: Get patient assessments (AJAX endpoint)
+     * POST: patient_id
+     */
+    public function getPatientAssessmentsAPI() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+        
+        $patient_id = intval($_POST['patient_id'] ?? 0);
+        
+        if ($patient_id <= 0) {
+            echo json_encode(['success' => false, 'assessments' => []]);
+            exit;
+        }
+        
+        try {
+            $assessments = $this->assessmentModel->getPatientAssessments($patient_id);
+            
+            // Enhance with outcome status
+            if (!empty($assessments)) {
+                foreach ($assessments as &$assessment) {
+                    // Check if outcome is recorded
+                    $outcome = $this->getAssessmentOutcome($assessment['id']);
+                    $assessment['outcome_status'] = $outcome ? 'recorded' : 'pending';
+                }
+            }
+            
+            echo json_encode(['success' => true, 'assessments' => $assessments]);
+        } catch (Exception $e) {
+            error_log("Get patient assessments error: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Failed to load assessments', 'assessments' => []]);
+        }
+        exit;
+    }
+    
+    /**
+     * Check if assessment has a recorded outcome
+     */
+    private function getAssessmentOutcome($assessment_id) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT id FROM patient_outcomes 
+                WHERE assessment_id = :assessment_id 
+                LIMIT 1
+            ");
+            $stmt->bindValue(':assessment_id', $assessment_id, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch();
+        } catch (Exception $e) {
+            error_log("Error checking assessment outcome: " . $e->getMessage());
+            return null;
+        }
+    }
 }
 
 // Handle POST requests

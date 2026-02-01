@@ -95,5 +95,43 @@ class PatientController {
     public function getPatientHistory($patient_id) {
         return $this->assessmentModel->getPatientAssessments($patient_id);
     }
+    
+    /**
+     * API: Search for patients (AJAX endpoint)
+     * POST: search_term (patient name or MRN)
+     */
+    public function searchPatientAPI() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+        
+        $search_term = htmlspecialchars($_POST['search_term'] ?? '');
+        
+        if (strlen($search_term) < 2) {
+            echo json_encode(['success' => false, 'patients' => []]);
+            exit;
+        }
+        
+        try {
+            $results = $this->patientModel->searchPatients($search_term);
+            
+            // Enhance results with last assessment date
+            if (!empty($results)) {
+                foreach ($results as &$patient) {
+                    $lastAssessment = $this->assessmentModel->getLastPatientAssessment($patient['id']);
+                    $patient['last_assessment_date'] = $lastAssessment['assessment_date'] ?? null;
+                }
+            }
+            
+            echo json_encode(['success' => true, 'patients' => $results]);
+        } catch (Exception $e) {
+            error_log("Patient search error: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Search failed', 'patients' => []]);
+        }
+        exit;
+    }
 }
 ?>

@@ -210,5 +210,30 @@ class Assessment {
             return false;
         }
     }
+    
+    /**
+     * Get the most recent assessment for a patient
+     */
+    public function getLastPatientAssessment($patient_id) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT a.id, a.assessment_date, a.smoking_status, a.hpv_status,
+                       u.full_name as doctor_name, 
+                       rr.risk_level, rr.risk_score
+                FROM assessments a
+                JOIN users u ON a.doctor_id = u.id
+                LEFT JOIN risk_results rr ON a.id = rr.assessment_id
+                WHERE a.patient_id = :patient_id
+                ORDER BY a.assessment_date DESC
+                LIMIT 1
+            ");
+            
+            $stmt->execute([':patient_id' => $patient_id]);
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            error_log("Get Last Patient Assessment Error: " . $e->getMessage());
+            return null;
+        }
+    }
 }
 ?>
