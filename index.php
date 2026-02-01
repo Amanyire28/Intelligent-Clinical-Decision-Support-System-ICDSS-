@@ -184,9 +184,30 @@ switch ($page) {
             echo json_encode(['success' => false, 'message' => 'Unauthorized']);
             exit;
         }
-        require_once __DIR__ . '/controllers/AssessmentController.php';
-        $controller = new AssessmentController();
-        $controller->getPatientAssessmentsAPI();
+        
+        $patient_id = intval($_POST['patient_id'] ?? 0);
+        
+        if ($patient_id <= 0) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'assessments' => []]);
+            exit;
+        }
+        
+        // Get patient assessments
+        header('Content-Type: application/json');
+        
+        try {
+            require_once __DIR__ . '/models/Assessment.php';
+            $db = getDBConnection();
+            $assessmentModel = new Assessment($db);
+            
+            $assessments = $assessmentModel->getPatientAssessments($patient_id);
+            
+            echo json_encode(['success' => true, 'assessments' => $assessments]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage(), 'assessments' => []]);
+        }
+        exit;
         break;
     
     case 'logout':

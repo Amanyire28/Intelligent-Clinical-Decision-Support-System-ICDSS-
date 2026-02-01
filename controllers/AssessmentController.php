@@ -6,10 +6,17 @@
  * ============================================================================
  */
 
-require_once __DIR__ . '/../config/db_config.php';
+// db_config.php is already required by index.php
+// require_once __DIR__ . '/../config/db_config.php';
+error_log("About to require Assessment model");
 require_once __DIR__ . '/../models/Assessment.php';
+error_log("Required Assessment model");
+error_log("About to require Patient model");
 require_once __DIR__ . '/../models/Patient.php';
+error_log("Required Patient model");
+error_log("About to require RiskResult model");
 require_once __DIR__ . '/../models/RiskResult.php';
+error_log("Required RiskResult model");
 
 class AssessmentController {
     private $db;

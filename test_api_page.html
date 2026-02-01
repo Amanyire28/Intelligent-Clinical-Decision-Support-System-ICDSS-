@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Assessment API</title>
+</head>
+<body>
+    <h1>Test Assessment API</h1>
+    <button onclick="testAPI()">Test API Call</button>
+    <div id="result"></div>
+    
+    <script>
+    async function testAPI() {
+        try {
+            const response = await fetch('/CANCER/index.php?page=api-patient-assessments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'patient_id=3'
+            });
+            
+            console.log('Response status:', response.status);
+            console.log('Response headers:');
+            response.headers.forEach((value, key) => {
+                console.log(`  ${key}: ${value}`);
+            });
+            
+            const text = await response.text();
+            console.log('Response text:', text);
+            
+            // Try to parse as JSON
+            try {
+                const json = JSON.parse(text);
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(json, null, 2) + '</pre>';
+            } catch (e) {
+                document.getElementById('result').innerHTML = '<pre style="color: red;">ERROR parsing JSON:\n' + e.message + '\n\nResponse text:\n' + escapeHtml(text.substring(0, 1000)) + '</pre>';
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            document.getElementById('result').innerHTML = '<pre style="color: red;">Fetch error: ' + error.message + '</pre>';
+        }
+    }
+    
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+    </script>
+</body>
+</html>
