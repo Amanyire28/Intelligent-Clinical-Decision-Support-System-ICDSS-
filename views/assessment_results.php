@@ -256,55 +256,171 @@
                     </div>
                 </div>
 
-                <!-- Action Panel -->
-                <div class="panel panel-action">
+                <!-- Outcome Recording Panel -->
+                <div class="panel panel-primary">
                     <div class="panel-header">
-                        <h3>Next Steps</h3>
+                        <h3>📋 Record Clinical Outcome & Diagnosis</h3>
+                        <p class="panel-subtitle">Document your findings, diagnosis, and treatment plan</p>
                     </div>
                     <div class="panel-body">
-                        <form method="POST" action="/CANCER/controllers/ActionController.php" id="actionForm">
+                        <form method="POST" action="/CANCER/index.php?page=api-outcome-action" id="outcomeForm">
+                            <input type="hidden" name="action" value="record">
                             <input type="hidden" name="assessment_id" value="<?php echo htmlspecialchars($assessment['id']); ?>">
                             
-                            <div class="form-group">
-                                <label for="action_type" class="form-label">Clinical Action:</label>
-                                <select id="action_type" name="action_type" class="form-control" required>
-                                    <option value="">Select action...</option>
-                                    <option value="monitoring">Routine Monitoring</option>
-                                    <option value="additional_tests">Additional Tests Needed</option>
-                                    <option value="referred">Refer to Specialist</option>
-                                    <option value="cleared">Cleared - No Further Action</option>
-                                </select>
+                            <!-- Section 1: Diagnosis -->
+                            <div class="form-section" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e0e0e0;">
+                                <h4 style="color: #333; margin-bottom: 15px;">🔍 Diagnosis</h4>
+                                
+                                <div class="form-group">
+                                    <label for="final_diagnosis" class="form-label"><strong>Final Diagnosis:</strong> *</label>
+                                    <select id="final_diagnosis" name="final_diagnosis" class="form-control" required>
+                                        <option value="">-- Select diagnosis --</option>
+                                        <option value="Malignant">🚨 Malignant (Cancer Confirmed)</option>
+                                        <option value="Benign">✅ Benign Condition</option>
+                                        <option value="Pending">⏳ Pending Further Investigation</option>
+                                        <option value="Unknown">❓ Unknown/Inconclusive</option>
+                                    </select>
+                                </div>
+
+                                <!-- Cancer Details (shown only if Malignant selected) -->
+                                <div id="cancerDetailsSection" style="display: none; background: #fff3e0; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                                    <div class="form-group">
+                                        <label for="cancer_type" class="form-label">Cancer Type:</label>
+                                        <select id="cancer_type" name="cancer_type" class="form-control">
+                                            <option value="">-- Select type --</option>
+                                            <option value="Squamous Cell Carcinoma">Squamous Cell Carcinoma</option>
+                                            <option value="Adenocarcinoma">Adenocarcinoma</option>
+                                            <option value="Salivary Gland Cancer">Salivary Gland Cancer</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="cancer_stage" class="form-label">Cancer Stage (TNM Classification):</label>
+                                        <select id="cancer_stage" name="cancer_stage" class="form-control">
+                                            <option value="">-- Select stage --</option>
+                                            <option value="Stage 1">Stage 1 (Early)</option>
+                                            <option value="Stage 2">Stage 2 (Localized)</option>
+                                            <option value="Stage 3">Stage 3 (Advanced)</option>
+                                            <option value="Stage 4">Stage 4 (Metastatic)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="tumor_location" class="form-label">Tumor Location:</label>
+                                        <input type="text" id="tumor_location" name="tumor_location" class="form-control" placeholder="e.g., Larynx, Pharynx, Tongue">
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="action_notes" class="form-label">Notes:</label>
-                                <textarea 
-                                    id="action_notes" 
-                                    name="action_notes" 
-                                    class="form-control" 
-                                    rows="3" 
-                                    placeholder="Document your clinical decision..."
-                                ></textarea>
+                            <!-- Section 2: Treatment Plan -->
+                            <div class="form-section" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e0e0e0;">
+                                <h4 style="color: #333; margin-bottom: 15px;">💊 Treatment Plan</h4>
+                                
+                                <div class="form-group">
+                                    <label class="form-label"><strong>Recommended Treatment:</strong> *</label>
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                                        <label style="display: flex; align-items: center; cursor: pointer;">
+                                            <input type="checkbox" name="treatment_plan" value="Surgery" style="margin-right: 8px;"> Surgery
+                                        </label>
+                                        <label style="display: flex; align-items: center; cursor: pointer;">
+                                            <input type="checkbox" name="treatment_plan" value="Radiation" style="margin-right: 8px;"> Radiation
+                                        </label>
+                                        <label style="display: flex; align-items: center; cursor: pointer;">
+                                            <input type="checkbox" name="treatment_plan" value="Chemotherapy" style="margin-right: 8px;"> Chemotherapy
+                                        </label>
+                                        <label style="display: flex; align-items: center; cursor: pointer;">
+                                            <input type="checkbox" name="treatment_plan" value="Targeted Therapy" style="margin-right: 8px;"> Targeted Therapy
+                                        </label>
+                                        <label style="display: flex; align-items: center; cursor: pointer;">
+                                            <input type="checkbox" name="treatment_plan" value="Immunotherapy" style="margin-right: 8px;"> Immunotherapy
+                                        </label>
+                                        <label style="display: flex; align-items: center; cursor: pointer;">
+                                            <input type="checkbox" name="treatment_plan" value="Monitoring" style="margin-right: 8px;"> Monitoring Only
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="treatment_urgency" class="form-label">Treatment Urgency:</label>
+                                    <select id="treatment_urgency" name="treatment_urgency" class="form-control">
+                                        <option value="">-- Select urgency --</option>
+                                        <option value="Immediate">🚨 Immediate (Within 1 week)</option>
+                                        <option value="Urgent">⚠️ Urgent (Within 2-4 weeks)</option>
+                                        <option value="Standard">📅 Standard (Within 1-3 months)</option>
+                                        <option value="Non-urgent">✅ Non-urgent (As needed)</option>
+                                    </select>
+                                </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="follow_up_date" class="form-label">Follow-up Date (if applicable):</label>
-                                <input 
-                                    type="date" 
-                                    id="follow_up_date" 
-                                    name="follow_up_date" 
-                                    class="form-control"
-                                >
+                            <!-- Section 3: Clinical Notes -->
+                            <div class="form-section" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e0e0e0;">
+                                <h4 style="color: #333; margin-bottom: 15px;">📝 Clinical Notes & Recommendations</h4>
+                                
+                                <div class="form-group">
+                                    <label for="clinical_findings" class="form-label"><strong>Clinical Findings:</strong></label>
+                                    <textarea 
+                                        id="clinical_findings" 
+                                        name="clinical_findings" 
+                                        class="form-control" 
+                                        rows="4" 
+                                        placeholder="Describe key clinical findings that support your diagnosis..."
+                                    ></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="recommendations" class="form-label"><strong>Clinical Recommendations:</strong></label>
+                                    <textarea 
+                                        id="recommendations" 
+                                        name="recommendations" 
+                                        class="form-control" 
+                                        rows="4" 
+                                        placeholder="Provide specific recommendations for patient management and follow-up..."
+                                    ></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="follow_up_date" class="form-label">Recommended Follow-up Date:</label>
+                                    <input 
+                                        type="date" 
+                                        id="follow_up_date" 
+                                        name="follow_up_date" 
+                                        class="form-control"
+                                    >
+                                </div>
                             </div>
 
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Record Action</button>
-                                <a href="/CANCER/doctor-dashboard.php" class="btn btn-secondary">Back to Dashboard</a>
-                                <button type="button" class="btn btn-tertiary" onclick="window.print()">Print Report</button>
+                            <!-- Form Actions -->
+                            <div class="form-actions" style="display: flex; gap: 10px; justify-content: space-between;">
+                                <div>
+                                    <button type="submit" class="btn btn-primary" style="padding: 12px 30px; font-size: 16px;">
+                                        ✅ Save Outcome & Diagnosis
+                                    </button>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <button type="button" class="btn btn-secondary" onclick="window.print()" style="padding: 12px 20px;">
+                                        🖨️ Print Report
+                                    </button>
+                                    <a href="/CANCER/index.php?page=doctor-dashboard" class="btn btn-tertiary" style="padding: 12px 20px; text-decoration: none;">
+                                        ← Back to Dashboard
+                                    </a>
+                                </div>
                             </div>
                         </form>
                     </div>
                 </div>
+
+                <script>
+                // Show/hide cancer details based on diagnosis selection
+                document.getElementById('final_diagnosis').addEventListener('change', function() {
+                    const cancerDetailsSection = document.getElementById('cancerDetailsSection');
+                    if (this.value === 'Malignant') {
+                        cancerDetailsSection.style.display = 'block';
+                    } else {
+                        cancerDetailsSection.style.display = 'none';
+                    }
+                });
+                </script>
             </section>
         </div>
     </div>

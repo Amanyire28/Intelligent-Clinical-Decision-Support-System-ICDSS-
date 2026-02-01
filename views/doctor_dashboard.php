@@ -75,6 +75,66 @@
                     </div>
                 </div>
 
+                <!-- Pending Outcomes Panel -->
+                <div class="panel panel-warning" style="margin-bottom: 30px; border-left: 4px solid #ff9800;">
+                    <div class="panel-header" style="background-color: #fff3e0;">
+                        <h3>⏳ Assessments Pending Outcome Recording</h3>
+                        <p class="panel-description">Assessments awaiting your diagnosis and treatment plan</p>
+                    </div>
+                    <div class="panel-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Patient Name</th>
+                                    <th>Assessment Date</th>
+                                    <th>Risk Level</th>
+                                    <th>Risk Score</th>
+                                    <th>Days Pending</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (isset($pending_outcomes) && !empty($pending_outcomes)): ?>
+                                    <?php foreach ($pending_outcomes as $assessment): ?>
+                                        <?php 
+                                            $assessmentDate = strtotime($assessment['assessment_date']);
+                                            $daysPending = intval((time() - $assessmentDate) / 86400);
+                                        ?>
+                                        <tr>
+                                            <td>
+                                                <strong><?php echo htmlspecialchars($assessment['first_name'] . ' ' . $assessment['last_name']); ?></strong>
+                                            </td>
+                                            <td><?php echo date('M d, Y H:i', strtotime($assessment['assessment_date'])); ?></td>
+                                            <td>
+                                                <span class="badge badge-<?php echo strtolower($assessment['risk_level'] ?? 'low'); ?>">
+                                                    <?php echo htmlspecialchars($assessment['risk_level'] ?? 'Unknown'); ?>
+                                                </span>
+                                            </td>
+                                            <td><?php echo number_format($assessment['risk_score'] ?? 0, 1); ?>/100</td>
+                                            <td>
+                                                <span style="color: <?php echo $daysPending > 3 ? '#d32f2f' : '#ff9800'; ?>; font-weight: bold;">
+                                                    <?php echo $daysPending; ?> day<?php echo $daysPending !== 1 ? 's' : ''; ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="/CANCER/index.php?page=assessment-results&id=<?php echo $assessment['id']; ?>" class="btn btn-small btn-primary">
+                                                    Record Outcome
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="6" class="text-center text-success" style="padding: 20px;">
+                                            ✅ All assessments have outcomes recorded! Great work!
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- Two-Column Layout: Assessment Form + Recent Cases -->
                 <div class="dashboard-grid">
                     <!-- Column 1: Quick Assessment Form -->

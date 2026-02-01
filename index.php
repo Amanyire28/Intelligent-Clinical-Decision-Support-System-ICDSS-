@@ -155,7 +155,8 @@ switch ($page) {
         break;
     
     case 'api-outcome-action':
-        if ($_SESSION['user_role'] !== 'admin') {
+        // Allow both doctors and admins to record outcomes
+        if ($_SESSION['user_role'] !== 'doctor' && $_SESSION['user_role'] !== 'admin') {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Unauthorized']);
             exit;

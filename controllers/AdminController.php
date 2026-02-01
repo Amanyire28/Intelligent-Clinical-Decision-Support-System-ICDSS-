@@ -571,12 +571,22 @@ class AdminController {
             return ['success' => false, 'message' => 'Assessment not found'];
         }
         
+        // Get treatment plan (multiple checkboxes)
+        $treatment_plan = [];
+        if (isset($_POST['treatment_plan'])) {
+            $treatment_plan = is_array($_POST['treatment_plan']) ? $_POST['treatment_plan'] : [$_POST['treatment_plan']];
+        }
+        
         $outcomeData = [
             'final_diagnosis' => $_POST['final_diagnosis'] ?? null,
             'cancer_stage' => $_POST['cancer_stage'] ?? null,
             'cancer_type' => $_POST['cancer_type'] ?? null,
-            'treatment_type' => $_POST['treatment_type'] ?? null,
+            'treatment_plan' => !empty($treatment_plan) ? implode(', ', $treatment_plan) : null,
+            'treatment_urgency' => $_POST['treatment_urgency'] ?? null,
+            'clinical_findings' => $_POST['clinical_findings'] ?? null,
+            'recommendations' => $_POST['recommendations'] ?? null,
             'outcome_date' => $_POST['outcome_date'] ?? date('Y-m-d'),
+            'follow_up_date' => $_POST['follow_up_date'] ?? null,
             'follow_up_status' => $_POST['follow_up_status'] ?? null,
             'survival_status' => $_POST['survival_status'] ?? 'Alive',
             'years_survived' => $_POST['years_survived'] ?? null,

@@ -41,6 +41,9 @@ class DoctorController {
         // Get recent assessments for current doctor
         $recent_assessments = $this->getRecentAssessments($_SESSION['user_id']);
         
+        // Get pending outcomes (assessments without outcome recorded)
+        $pending_outcomes = $this->getPendingOutcomes($_SESSION['user_id']);
+        
         // Include the dashboard view
         include __DIR__ . '/../views/doctor_dashboard.php';
     }
@@ -120,6 +123,36 @@ class DoctorController {
      */
     private function getRecentAssessments($doctor_id, $limit = 10) {
         return $this->assessmentModel->getDoctorRecentAssessments($doctor_id, $limit);
+    }
+    
+    /**
+     * Get assessments pending outcome recording
+     */
+    private function getPendingOutcomes($doctor_id) {
+        try {
+            $stmt = $this->db->prepare("
+                SELECT 
+                    a.id,
+                    a.assessment_date,
+                    a.patient_id,
+                    p.first_name,
+                    p.last_name,
+                    rr.risk_level,
+                    rr.risk_score
+                FROM assessments a
+                LEFT JOIN patients p ON a.patient_id = p.id
+                LEFT JOIN risk_results rr ON a.id = rr.assessment_id
+                LEFT JOIN patient_outcomes po ON a.id = po.assessment_id
+                WHERE a.doctor_id = ? AND po.id IS NULL
+                ORDER BY a.assessment_date DESC
+                LIMIT 20
+            ");
+            $stmt->execute([$doctor_id]);
+            return $stmt->fetchAll();
+        } catch (Exception $e) {
+            error_log("Error getting pending outcomes: " . $e->getMessage());
+            return [];
+        }
     }
 }
 ?>
