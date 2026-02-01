@@ -16,36 +16,42 @@ class PatientOutcome {
     
     /**
      * Record patient outcome (diagnosis and treatment)
+     * Handles comprehensive outcome data from doctor's form
      */
     public function recordOutcome($patient_id, $assessment_id, $data) {
         try {
             $stmt = $this->db->prepare("
                 INSERT INTO patient_outcomes (
                     patient_id, assessment_id, final_diagnosis, cancer_stage,
-                    cancer_type, treatment_type, outcome_date, follow_up_status,
-                    survival_status, years_survived, notes
+                    cancer_type, treatment_plan, treatment_urgency, 
+                    clinical_findings, recommendations, follow_up_date, tumor_location,
+                    outcome_date, follow_up_status, survival_status, years_survived, notes, recorded_at
                 ) VALUES (
-                    :patient_id, :assessment_id, :final_diagnosis, :cancer_stage,
-                    :cancer_type, :treatment_type, :outcome_date, :follow_up_status,
-                    :survival_status, :years_survived, :notes
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
                 )
             ");
             
             return $stmt->execute([
-                ':patient_id' => $patient_id,
-                ':assessment_id' => $assessment_id,
-                ':final_diagnosis' => $data['final_diagnosis'] ?? null,
-                ':cancer_stage' => $data['cancer_stage'] ?? null,
-                ':cancer_type' => $data['cancer_type'] ?? null,
-                ':treatment_type' => $data['treatment_type'] ?? null,
-                ':outcome_date' => $data['outcome_date'] ?? date('Y-m-d'),
-                ':follow_up_status' => $data['follow_up_status'] ?? null,
-                ':survival_status' => $data['survival_status'] ?? 'Alive',
-                ':years_survived' => $data['years_survived'] ?? null,
-                ':notes' => $data['notes'] ?? null
+                $patient_id,
+                $assessment_id,
+                $data['final_diagnosis'] ?? null,
+                $data['cancer_stage'] ?? null,
+                $data['cancer_type'] ?? null,
+                $data['treatment_plan'] ?? null,
+                $data['treatment_urgency'] ?? null,
+                $data['clinical_findings'] ?? null,
+                $data['recommendations'] ?? null,
+                $data['follow_up_date'] ?? null,
+                $data['tumor_location'] ?? null,
+                $data['outcome_date'] ?? date('Y-m-d'),
+                $data['follow_up_status'] ?? null,
+                $data['survival_status'] ?? 'Alive',
+                $data['years_survived'] ?? null,
+                $data['notes'] ?? null
             ]) ? $this->db->lastInsertId() : false;
         } catch (PDOException $e) {
             error_log("Patient Outcome Recording Error: " . $e->getMessage());
+            error_log("Data attempting to insert: " . json_encode($data));
             return false;
         }
     }
@@ -56,10 +62,10 @@ class PatientOutcome {
     public function getOutcomeByAssessmentId($assessment_id) {
         try {
             $stmt = $this->db->prepare("
-                SELECT * FROM patient_outcomes WHERE assessment_id = :assessment_id
+                SELECT * FROM patient_outcomes WHERE assessment_id = ?
             ");
             
-            $stmt->execute([':assessment_id' => $assessment_id]);
+            $stmt->execute([$assessment_id]);
             return $stmt->fetch();
         } catch (PDOException $e) {
             error_log("Get Outcome Error: " . $e->getMessage());
@@ -78,11 +84,11 @@ class PatientOutcome {
                 FROM patient_outcomes po
                 JOIN assessments a ON po.assessment_id = a.id
                 LEFT JOIN risk_results rr ON a.id = rr.assessment_id
-                WHERE po.patient_id = :patient_id
+                WHERE po.patient_id = ?
                 ORDER BY a.assessment_date DESC
             ");
             
-            $stmt->execute([':patient_id' => $patient_id]);
+            $stmt->execute([$patient_id]);
             return $stmt->fetchAll();
         } catch (PDOException $e) {
             error_log("Get Patient Outcomes Error: " . $e->getMessage());
