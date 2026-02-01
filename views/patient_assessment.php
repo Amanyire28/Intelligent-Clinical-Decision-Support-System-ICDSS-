@@ -684,6 +684,7 @@
         // Patient Search
         document.getElementById('patientSearchInput')?.addEventListener('input', async function() {
             const query = this.value.trim();
+            console.log('Search input: ' + query);
             
             if (query.length < 2) {
                 document.getElementById('searchResultsContainer').style.display = 'none';
@@ -693,8 +694,10 @@
 
             document.getElementById('searchLoadingSpinner').style.display = 'block';
             document.getElementById('searchResultsContainer').style.display = 'none';
+            document.getElementById('noSearchResults').style.display = 'none';
 
             try {
+                console.log('Sending search request to /CANCER/index.php?page=api-patient-search');
                 const response = await fetch('/CANCER/index.php?page=api-patient-search', {
                     method: 'POST',
                     headers: {
@@ -703,12 +706,16 @@
                     body: 'search_term=' + encodeURIComponent(query)
                 });
 
+                console.log('Response status: ' + response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
                 document.getElementById('searchLoadingSpinner').style.display = 'none';
 
-                if (data.success && data.patients.length > 0) {
+                if (data.success && data.patients && data.patients.length > 0) {
+                    console.log('Found ' + data.patients.length + ' patients');
                     displaySearchResults(data.patients);
                 } else {
+                    console.log('No patients found or search failed');
                     document.getElementById('searchResultsContainer').style.display = 'none';
                     document.getElementById('noSearchResults').style.display = 'block';
                 }
@@ -729,18 +736,33 @@
                     ? `Last assessment: ${new Date(patient.last_assessment_date).toLocaleDateString()}`
                     : 'No previous assessments';
                 
-                const html = `
-                    <div class="search-result-item">
-                        <div class="result-patient-info">
-                            <h4>${htmlEscape(patient.first_name)} ${htmlEscape(patient.last_name)}</h4>
-                            <p>MRN: ${htmlEscape(patient.medical_record_number || 'N/A')} | Age: ${age} | ${lastAssessmentText}</p>
-                        </div>
-                        <button type="button" class="result-select-btn" onclick="selectPatient(${patient.id}, '${htmlEscape(patient.first_name)}', '${htmlEscape(patient.last_name)}', '${patient.date_of_birth}', '${patient.gender}')">
-                            Select
-                        </button>
-                    </div>
-                `;
-                container.innerHTML += html;
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'search-result-item';
+                
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'result-patient-info';
+                
+                const nameHeading = document.createElement('h4');
+                nameHeading.textContent = `${patient.first_name} ${patient.last_name}`;
+                
+                const metaP = document.createElement('p');
+                metaP.textContent = `MRN: ${patient.medical_record_number || 'N/A'} | Age: ${age} | ${lastAssessmentText}`;
+                
+                infoDiv.appendChild(nameHeading);
+                infoDiv.appendChild(metaP);
+                
+                const selectBtn = document.createElement('button');
+                selectBtn.type = 'button';
+                selectBtn.className = 'result-select-btn';
+                selectBtn.textContent = 'Select';
+                selectBtn.addEventListener('click', function() {
+                    selectPatient(patient.id, patient.first_name, patient.last_name, patient.date_of_birth, patient.gender);
+                });
+                
+                resultDiv.appendChild(infoDiv);
+                resultDiv.appendChild(selectBtn);
+                
+                container.appendChild(resultDiv);
             });
 
             document.getElementById('searchResultsContainer').style.display = 'block';

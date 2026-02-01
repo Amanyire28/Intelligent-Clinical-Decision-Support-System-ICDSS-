@@ -72,7 +72,9 @@ class Patient {
             ");
             
             $stmt->execute([':search' => $search]);
-            return $stmt->fetchAll();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Patient search for term '$search_term' returned " . count($results) . " results");
+            return $results;
         } catch (PDOException $e) {
             error_log("Patient Search Error: " . $e->getMessage());
             return [];

@@ -108,28 +108,35 @@ class PatientController {
             exit;
         }
         
-        $search_term = htmlspecialchars($_POST['search_term'] ?? '');
+        $search_term = isset($_POST['search_term']) ? trim($_POST['search_term']) : '';
+        error_log("API: Patient search initiated with term: '" . $search_term . "'");
         
         if (strlen($search_term) < 2) {
-            echo json_encode(['success' => false, 'patients' => []]);
+            error_log("API: Search term too short: " . strlen($search_term) . " chars");
+            echo json_encode(['success' => false, 'patients' => [], 'message' => 'Search term must be at least 2 characters']);
             exit;
         }
         
         try {
             $results = $this->patientModel->searchPatients($search_term);
+            error_log("API: Found " . count($results) . " patients");
             
             // Enhance results with last assessment date
             if (!empty($results)) {
-                foreach ($results as &$patient) {
+                foreach ($results as $key => $patient) {
                     $lastAssessment = $this->assessmentModel->getLastPatientAssessment($patient['id']);
-                    $patient['last_assessment_date'] = $lastAssessment['assessment_date'] ?? null;
+                    if ($lastAssessment) {
+                        $results[$key]['last_assessment_date'] = $lastAssessment['assessment_date'];
+                    } else {
+                        $results[$key]['last_assessment_date'] = null;
+                    }
                 }
             }
             
             echo json_encode(['success' => true, 'patients' => $results]);
         } catch (Exception $e) {
             error_log("Patient search error: " . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'Search failed', 'patients' => []]);
+            echo json_encode(['success' => false, 'message' => 'Search failed: ' . $e->getMessage(), 'patients' => []]);
         }
         exit;
     }
