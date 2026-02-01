@@ -1,0 +1,394 @@
+/**
+ * ============================================================================
+ * ICDSS SYSTEM ARCHITECTURE QUICK REFERENCE
+ * ============================================================================
+ */
+
+/* ============================================================================
+   PROJECT PHASES
+   ============================================================================ */
+
+PHASE 1: DASHBOARDS & FRONTEND ✅ COMPLETE
+├── User interfaces (doctor + admin)
+├── HTML templates
+├── CSS styling (hospital-grade)
+├── Form structure & validation
+├── Placeholder data display
+└── No actual risk calculations yet
+
+PHASE 2: DATABASE DESIGN ✅ COMPLETE
+├── MySQL schema
+├── Table structures
+├── Relationships
+├── Indexes & optimization
+└── No data logic yet
+
+PHASE 3: BACKEND STRUCTURE ⏳ PENDING
+├── Form submission handling
+├── Database connection & queries
+├── Data retrieval & storage
+├── API endpoints
+├── Real statistics
+└── Still placeholder risk results
+
+PHASE 4: RISK ENGINE ⏳ PENDING
+├── Weighted risk scoring algorithm
+├── Feature extraction
+├── Model parameters
+├── Threshold classification
+├── Explainability tracking
+└── Confidence calculation
+
+/* ============================================================================
+   DATA FLOW
+   ============================================================================ */
+
+USER LOGIN
+├── AuthController::login()
+├── User::authenticate()
+└── Session initialization
+
+DOCTOR ASSESSMENT FLOW
+├── Doctor fills assessment form
+├── JavaScript client-side validation
+├── Form submission to AssessmentController
+├── Assessment::createAssessment() → Database
+├── RiskResult::createPlaceholderResult() (Phase 4: real engine)
+└── Display results page
+
+ADMIN VIEW FLOW
+├── AdminController::dashboard()
+├── Fetch statistics from models
+├── RiskResult::getRiskStatistics()
+├── User::getAllDoctors()
+└── Display aggregated view
+
+/* ============================================================================
+   KEY MODELS & METHODS
+   ============================================================================ */
+
+User Model
+├── authenticate($username, $password)
+├── createUser(...)
+├── getUserById($user_id)
+├── getAllDoctors()
+└── deactivateUser($user_id)
+
+Patient Model
+├── createPatient(...)
+├── getPatientById($patient_id)
+├── searchPatients($search_term)
+├── updatePatient(...)
+└── calculateAge($date_of_birth)
+
+Assessment Model
+├── createAssessment($patient_id, $doctor_id, $data)
+├── getAssessmentById($assessment_id)
+├── getPatientAssessments($patient_id)
+├── getAllAssessments($limit, $offset)
+├── getTotalAssessmentCount()
+└── updateAssessment($assessment_id, $data)
+
+RiskResult Model
+├── createRiskResult(...) ← Phase 4: Risk Engine output
+├── getRiskResultByAssessmentId($assessment_id)
+├── createPlaceholderResult($assessment_id) ← Placeholder for Phase 4
+├── getRiskStatistics()
+└── getHighRiskPatients($limit)
+
+/* ============================================================================
+   DATABASE TABLES
+   ============================================================================ */
+
+users (user management)
+├── id (PK)
+├── username, email, password_hash
+├── full_name, specialization, license_number
+├── role (doctor | admin)
+└── is_active, timestamps
+
+patients (patient info)
+├── id (PK)
+├── first_name, last_name, date_of_birth
+├── gender, contact_phone, contact_email
+├── medical_record_number
+└── timestamps
+
+assessments (risk assessment data)
+├── id (PK)
+├── patient_id (FK), doctor_id (FK)
+├── Symptoms: sore_throat_duration, voice_changes, difficulty_swallowing, ...
+├── Lifestyle: smoking_status, smoking_years, alcohol_consumption
+├── Medical History: hpv_status, family_cancer_history, ...
+├── Lab Indicators: hemoglobin_level, lymphocyte_count
+├── clinical_notes
+└── assessment_date, timestamps
+
+risk_results (assessment outcomes)
+├── id (PK)
+├── assessment_id (FK, unique)
+├── risk_score (0-100), risk_level (Low/Moderate/High)
+├── confidence_percentage (0-100)
+├── primary_factors, secondary_factors
+├── clinical_recommendation
+├── scoring_details (JSON for Phase 4)
+└── timestamps
+
+action_history (clinical decisions)
+├── id (PK)
+├── assessment_id (FK), doctor_id (FK)
+├── action_type (referred | monitoring | cleared | additional_tests)
+├── action_notes, follow_up_date
+└── timestamps
+
+system_logs (audit trail)
+├── id (PK)
+├── user_id (FK)
+├── action, resource_type, resource_id
+├── description
+└── created_at
+
+/* ============================================================================
+   FRONTEND COMPONENTS
+   ============================================================================ */
+
+Login Page (views/login.php)
+├── Username/Email field
+├── Password field
+├── Error messages
+└── Demo credentials display
+
+Doctor Dashboard (views/doctor_dashboard.php)
+├── Navigation header
+├── Sidebar menu
+├── Quick stats (assessments, high-risk, patients, monthly)
+├── Assessment form (left column)
+│   └── Patient selection, symptoms, lifestyle, medical history, labs
+├── Recent assessments table (right column)
+└── Form validation JS
+
+Assessment Results (views/assessment_results.php)
+├── Patient information card
+├── Risk score visualization
+│   ├── Score circle (0-100)
+│   ├── Risk level badge
+│   └── Confidence progress bar
+├── Clinical recommendation
+├── Risk factors (primary & secondary)
+├── Assessment details grid
+├── Clinical action form
+└── Print button
+
+Admin Dashboard (views/admin_dashboard.php)
+├── System statistics cards
+├── Risk distribution table
+├── High-risk patients list
+├── Doctor management table
+├── System information panel
+├── Activity log
+└── Configuration placeholder (Phase 4)
+
+/* ============================================================================
+   STYLING & CSS CLASSES
+   ============================================================================ */
+
+Color Scheme
+├── Primary Blue: #2196F3
+├── Success Green: #4CAF50
+├── Warning Orange: #FF9800
+├── Danger Red: #F44336
+└── Neutral Grays: #212121 to #F5F5F5
+
+Component Classes
+├── .panel, .panel-primary, .panel-secondary
+├── .btn, .btn-primary, .btn-secondary
+├── .badge, .badge-success, .badge-high
+├── .form-group, .form-control, .form-label
+├── .data-table
+├── .stat-card
+├── .progress-bar, .progress-fill
+├── .alert, .alert-error
+└── .nav-link
+
+Medical-Specific
+├── Risk levels: Low (green), Moderate (orange), High (red)
+├── Confidence: Progress bar (0-100%)
+├── Symptoms: Checkbox indicators
+└── Lab values: With normal ranges
+
+/* ============================================================================
+   JAVASCRIPT UTILITIES
+   ============================================================================ */
+
+form_validation.js
+├── validateAssessmentForm()
+├── validateLoginForm()
+├── highlightField()
+├── setupConditionalFields()
+├── setupPatientSearch()
+├── searchPatients() - Mock function
+└── selectPatient()
+
+dashboard.js
+├── handleAssessmentSubmit()
+├── setupHelpTooltips()
+├── updateDashboardStats() - Phase 3
+├── exportAssessmentData() - Future
+└── Tooltip styling
+
+admin.js
+├── initializeAdminDashboard()
+├── setupTableFilters()
+├── filterTable()
+├── sortTableByColumn()
+├── updateRiskDistribution() - Phase 4
+├── exportAdminReport() - Future
+└── monitorSystemHealth() - Phase 4
+
+/* ============================================================================
+   CONTROLLERS & ROUTING
+   ============================================================================ */
+
+index.php (Main Router)
+├── Session management
+├── Route dispatch
+├── Access control
+└── Error handling
+
+AuthController.php
+├── login() - Authenticate user
+└── logout() - Destroy session
+
+DoctorController.php
+├── dashboard() - Display doctor interface
+├── getTotalAssessmentCount()
+├── getHighRiskCount()
+└── getRecentAssessments()
+
+AssessmentController.php
+├── createAssessment() - Handle form submission
+├── displayResults() - Show risk results
+└── sendError() - JSON error response
+
+AdminController.php
+├── dashboard() - Display admin interface
+├── manageUsers() - User management
+├── viewAssessments() - All assessments
+└── Statistics aggregation methods
+
+PatientController.php
+├── searchPatients() - Patient lookup
+└── getPatientHistory() - Assessment history
+
+ActionController.php
+└── recordAction() - Clinical decision logging
+
+/* ============================================================================
+   SECURITY IMPLEMENTATION
+   ============================================================================ */
+
+Authentication
+├── bcrypt password hashing (PASSWORD_DEFAULT)
+├── Session management
+├── Role-based access control
+└── Login attempt tracking (Phase 3)
+
+Database
+├── Prepared statements (PDO)
+└── Type casting & validation
+
+Input Validation
+├── htmlspecialchars() for XSS prevention
+├── strip_tags() for dangerous HTML
+├── trim() for whitespace
+├── Type casting (intval, floatval)
+└── Range validation (age, scores, etc.)
+
+Audit Trail
+├── system_logs table
+├── logSystemAction() function
+├── User action tracking
+└── Resource modification logging
+
+/* ============================================================================
+   NEXT STEPS (PHASE 2-4)
+   ============================================================================ */
+
+PHASE 2: Data persistence
+├── Test database connectivity
+├── Insert sample data
+└── Verify table constraints
+
+PHASE 3: Backend integration
+├── Connect forms to database
+├── Implement patient search API
+├── Real statistics aggregation
+├── Error handling & validation
+└── API endpoint testing
+
+PHASE 4: Risk engine
+├── Design scoring algorithm
+├── Weight determination
+├── Feature engineering
+├── Threshold classification
+├── Explainability layer
+├── Integration with results display
+└── Validation & testing
+
+PRODUCTION READY
+├── HTTPS/TLS
+├── Environment variables
+├── Database hardening
+├── CSRF tokens
+├── Rate limiting
+├── Comprehensive logging
+├── Regular security audits
+└── HIPAA/GDPR compliance
+
+/* ============================================================================
+   FILE LOCATIONS & PURPOSES
+   ============================================================================ */
+
+Core Configuration
+├── config/db_config.php - Database connection & utilities
+└── index.php - Application entry point
+
+Controllers
+├── controllers/AuthController.php - Authentication
+├── controllers/DoctorController.php - Doctor operations
+├── controllers/AdminController.php - Admin operations
+├── controllers/AssessmentController.php - Risk assessments
+├── controllers/PatientController.php - Patient data
+└── controllers/ActionController.php - Clinical decisions
+
+Models
+├── models/User.php - User CRUD & auth
+├── models/Patient.php - Patient data
+├── models/Assessment.php - Assessments data
+└── models/RiskResult.php - Risk scoring results
+
+Views
+├── views/login.php - Login interface
+├── views/doctor_dashboard.php - Doctor main page
+├── views/assessment_results.php - Risk results display
+├── views/admin_dashboard.php - Admin interface
+├── views/base_layout.php - Layout template
+
+Styles & Scripts
+├── assets/css/style.css - Complete stylesheet
+├── assets/js/form_validation.js - Client-side validation
+├── assets/js/dashboard.js - Doctor utilities
+└── assets/js/admin.js - Admin utilities
+
+Database
+├── database/schema.sql - MySQL schema
+└── [Live database: icdss_cancer_db]
+
+Documentation
+├── README.md - Full documentation
+└── ARCHITECTURE.txt - This file
+
+============================================================================
+END QUICK REFERENCE
+============================================================================
+*/

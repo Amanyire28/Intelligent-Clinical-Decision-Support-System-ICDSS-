@@ -1,0 +1,63 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ICDSS Throat Cancer Risk Assessment</title>
+    <link rel="stylesheet" href="/CANCER/assets/css/style.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h1 class="login-title">
+                    <span class="title-icon">⚕️</span> ICDSS
+                </h1>
+                <p class="login-subtitle">Intelligent Clinical Decision Support System</p>
+                <p class="login-description">Throat Cancer Risk Assessment Platform</p>
+            </div>
+
+            
+            <form method="POST" action="/CANCER/auth.php" class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="username" class="form-label">Username or Email:</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-control" 
+                        placeholder="Enter your username or email"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password:</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-control" 
+                        placeholder="Enter your password"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Login to Dashboard
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <p class="login-note">
+                    <strong>Demo Credentials:</strong><br>
+                    Doctor: doctor1 / password123<br>
+                    Admin: admin1 / password123
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
