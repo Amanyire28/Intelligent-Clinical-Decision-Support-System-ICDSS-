@@ -684,20 +684,22 @@
         // Patient Search
         document.getElementById('patientSearchInput')?.addEventListener('input', async function() {
             const query = this.value.trim();
-            console.log('Search input: ' + query);
+            console.log('Search input changed: "' + query + '" (length: ' + query.length + ')');
             
             if (query.length < 2) {
+                console.log('Query too short, hiding results');
                 document.getElementById('searchResultsContainer').style.display = 'none';
                 document.getElementById('noSearchResults').style.display = 'none';
                 return;
             }
 
+            console.log('Starting search...');
             document.getElementById('searchLoadingSpinner').style.display = 'block';
             document.getElementById('searchResultsContainer').style.display = 'none';
             document.getElementById('noSearchResults').style.display = 'none';
 
             try {
-                console.log('Sending search request to /CANCER/index.php?page=api-patient-search');
+                console.log('Fetching: /CANCER/index.php?page=api-patient-search');
                 const response = await fetch('/CANCER/index.php?page=api-patient-search', {
                     method: 'POST',
                     headers: {
@@ -711,11 +713,14 @@
                 console.log('Response data:', data);
                 document.getElementById('searchLoadingSpinner').style.display = 'none';
 
-                if (data.success && data.patients && data.patients.length > 0) {
-                    console.log('Found ' + data.patients.length + ' patients');
+                // Check if we have valid data
+                if (data && data.success === true && Array.isArray(data.patients) && data.patients.length > 0) {
+                    console.log('Found ' + data.patients.length + ' patients, displaying results');
                     displaySearchResults(data.patients);
                 } else {
-                    console.log('No patients found or search failed');
+                    console.log('No patients found or invalid response');
+                    console.log('data.success:', data.success);
+                    console.log('data.patients:', data.patients);
                     document.getElementById('searchResultsContainer').style.display = 'none';
                     document.getElementById('noSearchResults').style.display = 'block';
                 }
