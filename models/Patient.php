@@ -63,6 +63,10 @@ class Patient {
     public function searchPatients($search_term) {
         try {
             $search = "%" . $search_term . "%";
+            error_log("=== PATIENT SEARCH DEBUG ===");
+            error_log("Search term: '$search_term'");
+            error_log("Search pattern: '$search'");
+            
             $stmt = $this->db->prepare("
                 SELECT id, first_name, last_name, date_of_birth, gender, medical_record_number, created_at
                 FROM patients 
@@ -71,9 +75,19 @@ class Patient {
                 LIMIT 50
             ");
             
-            $stmt->execute([':search' => $search]);
+            $exec_result = $stmt->execute([':search' => $search]);
+            error_log("Execute result: " . ($exec_result ? 'true' : 'false'));
+            
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            error_log("Patient search for term '$search_term' returned " . count($results) . " results");
+            error_log("Results count: " . count($results));
+            
+            if (!empty($results)) {
+                foreach ($results as $r) {
+                    error_log("  - Found: " . $r['first_name'] . " " . $r['last_name']);
+                }
+            }
+            
+            error_log("=== END SEARCH DEBUG ===");
             return $results;
         } catch (PDOException $e) {
             error_log("Patient Search Error: " . $e->getMessage());
