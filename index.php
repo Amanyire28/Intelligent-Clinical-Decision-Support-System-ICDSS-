@@ -178,6 +178,98 @@ switch ($page) {
         $controller->searchPatientAPI();
         break;
     
+    case 'api-historical-insights':
+        // Get historical data insights for decision support
+        if ($_SESSION['user_role'] !== 'doctor' && $_SESSION['user_role'] !== 'admin') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+        require_once __DIR__ . '/models/HistoricalAnalytics.php';
+        header('Content-Type: application/json');
+        
+        $db = getDBConnection();
+        $analytics = new HistoricalAnalytics($db);
+        
+        $action = $_GET['action'] ?? null;
+        $assessmentId = intval($_GET['assessment_id'] ?? 0);
+        
+        // Get assessment details first
+        require_once __DIR__ . '/models/Assessment.php';
+        $assessmentModel = new Assessment($db);
+        $assessment = $assessmentModel->getAssessmentById($assessmentId);
+        
+        if (!$assessment) {
+            echo json_encode(['success' => false, 'message' => 'Assessment not found']);
+            exit;
+        }
+        
+        // Get patient details
+        require_once __DIR__ . '/models/Patient.php';
+        $patientModel = new Patient($db);
+        $patient = $patientModel->getPatientById($assessment['patient_id']);
+        $assessment['date_of_birth'] = $patient['date_of_birth'];
+        
+        // Get risk result for this assessment
+        require_once __DIR__ . '/models/RiskResult.php';
+        $riskModel = new RiskResult($db);
+        $riskResult = $riskModel->getRiskByAssessmentId($assessmentId);
+        if ($riskResult) {
+            $assessment['risk_score'] = $riskResult['risk_score'];
+            $assessment['risk_level'] = $riskResult['risk_level'];
+        }
+        
+        $result = ['success' => true, 'data' => []];
+        
+        switch ($action) {
+            case 'similar-cases':
+                $result['data']['similar_cases'] = $analytics->findSimilarCases($assessment, 5);
+                break;
+            case 'diagnosis-distribution':
+                $result['data']['distribution'] = $analytics->getDiagnosisDistribution(
+                    $assessment['risk_level'] ?? 'Moderate',
+                    $assessment['smoking_status'] ?? 'unknown'
+                );
+                break;
+            case 'cohort-stats':
+                $result['data']['stats'] = $analytics->getCohortStats(
+                    $assessment['smoking_status'] ?? 'unknown',
+                    $assessment['risk_level'] ?? 'Moderate'
+                );
+                break;
+            case 'recommendation':
+                $result['data']['recommendation'] = $analytics->generateRecommendation(
+                    $assessment['risk_level'] ?? 'Moderate',
+                    $assessment['smoking_status'] ?? 'unknown',
+                    $_GET['symptoms'] ?? ''
+                );
+                break;
+            case 'full-insights':
+                $result['data']['similar_cases'] = $analytics->findSimilarCases($assessment, 5);
+                $result['data']['diagnosis_distribution'] = $analytics->getDiagnosisDistribution(
+                    $assessment['risk_level'] ?? 'Moderate',
+                    $assessment['smoking_status'] ?? 'unknown'
+                );
+                $result['data']['cohort_stats'] = $analytics->getCohortStats(
+                    $assessment['smoking_status'] ?? 'unknown',
+                    $assessment['risk_level'] ?? 'Moderate'
+                );
+                $result['data']['risk_accuracy'] = $analytics->getRiskAccuracy($assessment['risk_level'] ?? 'Moderate');
+                $result['data']['recommendation'] = $analytics->generateRecommendation(
+                    $assessment['risk_level'] ?? 'Moderate',
+                    $assessment['smoking_status'] ?? 'unknown',
+                    $_GET['symptoms'] ?? ''
+                );
+                break;
+            default:
+                $result['success'] = false;
+                $result['message'] = 'Invalid action';
+        }
+        
+        echo json_encode($result);
+        exit;
+        break;
+    
     case 'api-patient-assessments':
         // Doctors can view patient assessments
         if ($_SESSION['user_role'] !== 'doctor' && $_SESSION['user_role'] !== 'admin') {

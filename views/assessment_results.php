@@ -256,6 +256,19 @@
                     </div>
                 </div>
 
+                <!-- Historical Decision Support Panel -->
+                <div class="panel panel-info">
+                    <div class="panel-header">
+                        <h3>📊 Historical Decision Support</h3>
+                        <p class="panel-subtitle">Similar cases and outcomes from historical data</p>
+                    </div>
+                    <div class="panel-body">
+                        <div id="historicalInsights" style="text-align: center; padding: 30px; color: #666;">
+                            <p>⏳ Loading historical insights...</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Outcome Recording Panel -->
                 <div class="panel panel-primary">
                     <div class="panel-header">
@@ -459,11 +472,111 @@
                         submitBtn.innerHTML = originalText;
                     });
                 });
-                </script>
-            </section>
-        </div>
-    </div>
 
-    <script src="/CANCER/assets/js/form_validation.js"></script>
-</body>
-</html>
+                // Load historical insights
+                document.addEventListener('DOMContentLoaded', function() {
+                    loadHistoricalInsights();
+                });
+
+                function loadHistoricalInsights() {
+                    const assessmentId = <?php echo intval($assessment['id']); ?>;
+                    const insightsDiv = document.getElementById('historicalInsights');
+                    
+                    fetch('/CANCER/index.php?page=api-historical-insights&action=full-insights&assessment_id=' + assessmentId)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                displayHistoricalInsights(data.data);
+                            } else {
+                                insightsDiv.innerHTML = '<p style="color: orange;">⚠️ Could not load historical insights</p>';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading insights:', error);
+                            insightsDiv.innerHTML = '<p style="color: red;">❌ Error loading historical data</p>';
+                        });
+                }
+
+                function displayHistoricalInsights(data) {
+                    const insightsDiv = document.getElementById('historicalInsights');
+                    let html = '';
+
+                    // Recommendation Section
+                    if (data.recommendation) {
+                        const rec = data.recommendation;
+                        const confColor = rec.confidence === 'high' ? '#4caf50' : '#ff9800';
+                        html += `
+                            <div style="background: ${confColor}22; border-left: 4px solid ${confColor}; padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: left;">
+                                <h4 style="margin-top: 0; color: ${confColor};">💡 Evidence-Based Recommendation</h4>
+                                <p><strong>${rec.message}</strong></p>
+                                <p style="font-size: 12px; color: #666;">Based on ${rec.data_points} similar historical cases</p>
+                            </div>
+                        `;
+                    }
+
+                    // Cohort Statistics
+                    if (data.cohort_stats && data.cohort_stats.total_patients > 0) {
+                        const stats = data.cohort_stats;
+                        html += `
+                            <div style="background: #e3f2fd; padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: left;">
+                                <h4 style="margin-top: 0; color: #1976d2;">📈 Similar Patient Cohort (${stats.total_patients} cases)</h4>
+                                <table style="width: 100%; font-size: 13px;">
+                                    <tr>
+                                        <td><strong>Malignancy Rate:</strong></td>
+                                        <td style="text-align: right; color: #d32f2f;"><strong>${stats.malignancy_rate}%</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Average Risk Score:</strong></td>
+                                        <td style="text-align: right;">${stats.avg_risk_score}/100</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Avg Days to Diagnosis:</strong></td>
+                                        <td style="text-align: right;">${Math.round(stats.avg_days_to_diagnosis)} days</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        `;
+                    }
+
+                    // Risk Level Accuracy
+                    if (data.risk_accuracy) {
+                        const accuracy = data.risk_accuracy;
+                        html += `
+                            <div style="background: #f3e5f5; padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: left;">
+                                <h4 style="margin-top: 0; color: #7b1fa2;">🎯 Risk Assessment Accuracy</h4>
+                                <p><strong>${accuracy.risk_level} Risk:</strong> ${accuracy.total_cases} historical cases</p>
+                                <p style="color: #d32f2f;"><strong>Actual Malignancy Rate:</strong> ${accuracy.actual_malignancy_rate}%</p>
+                                <p style="font-size: 12px; color: #666;">${accuracy.expected_outcome}</p>
+                            </div>
+                        `;
+                    }
+
+                    // Similar Cases
+                    if (data.similar_cases && data.similar_cases.length > 0) {
+                        html += `<div style="text-align: left; margin-top: 20px;">
+                                    <h4 style="color: #1976d2;">👥 Similar Historical Cases (${data.similar_cases.length})</h4>
+                                    <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                                        <tr style="background: #f0f0f0; border-bottom: 2px solid #ddd;">
+                                            <th style="padding: 8px; text-align: left;">Date</th>
+                                            <th style="padding: 8px; text-align: left;">Risk</th>
+                                            <th style="padding: 8px; text-align: left;">Score</th>
+                                            <th style="padding: 8px; text-align: left;">Diagnosis</th>
+                                            <th style="padding: 8px; text-align: left;">Treatment</th>
+                                        </tr>`;
+                        
+                        data.similar_cases.forEach(case_ => {
+                            const diagColor = case_.final_diagnosis === 'Malignant' ? '#d32f2f' : '#4caf50';
+                            html += `<tr style="border-bottom: 1px solid #eee;">
+                                        <td style="padding: 8px;">${case_.assessment_date.substring(0,10)}</td>
+                                        <td style="padding: 8px;">${case_.risk_level}</td>
+                                        <td style="padding: 8px;">${case_.risk_score}/100</td>
+                                        <td style="padding: 8px; color: ${diagColor}; font-weight: bold;">${case_.final_diagnosis || '—'}</td>
+                                        <td style="padding: 8px; font-size: 11px;">${case_.treatment_plan || '—'}</td>
+                                    </tr>`;
+                        });
+                        html += `</table></div>`;
+                    }
+
+                    insightsDiv.innerHTML = html || '<p>No historical data available yet</p>';
+                }
+                </script>
