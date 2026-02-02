@@ -488,18 +488,24 @@
                             if (data.success) {
                                 displayHistoricalInsights(data.data);
                             } else {
-                                insightsDiv.innerHTML = '<p style="color: orange;">⚠️ Could not load historical insights</p>';
+                                insightsDiv.innerHTML = '<p style="color: orange;">⚠️ Could not load historical insights: ' + (data.message || 'Unknown error') + '</p>';
                             }
                         })
                         .catch(error => {
                             console.error('Error loading insights:', error);
-                            insightsDiv.innerHTML = '<p style="color: red;">❌ Error loading historical data</p>';
+                            insightsDiv.innerHTML = '<p style="color: red;">❌ Error loading historical data: ' + error.message + '</p>';
                         });
                 }
 
                 function displayHistoricalInsights(data) {
                     const insightsDiv = document.getElementById('historicalInsights');
                     let html = '';
+
+                    // Check if we have any data
+                    if (!data || (Object.keys(data).length === 0)) {
+                        insightsDiv.innerHTML = '<p style="color: orange;">⚠️ No historical data available yet. More assessments needed.</p>';
+                        return;
+                    }
 
                     // Recommendation Section
                     if (data.recommendation) {
