@@ -16,6 +16,10 @@ define('DB_PORT', 3306);
 // Connection options
 define('DB_CHARSET', 'utf8mb4');
 
+// Base URL configuration - adjust based on your hosting environment
+// For local XAMPP: '/CANCER' or for root hosting: ''
+define('BASE_URL', rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'));
+
 /**
  * Establish database connection using PDO
  * PDO provides prepared statements protection against SQL injection

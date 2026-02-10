@@ -1,10 +1,15 @@
+<?php
+if (!defined('BASE_URL')) {
+    require_once __DIR__ . '/../config/db_config.php';
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient History - ICDSS</title>
-    <link rel="stylesheet" href="/CANCER/assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/style.css">
 </head>
 <body>
     <div class="container-fluid">
@@ -19,7 +24,7 @@
                 <span class="user-info">
                     Welcome, <strong><?php echo htmlspecialchars($current_user['full_name'] ?? 'Doctor'); ?></strong>
                 </span>
-                <a href="/CANCER/logout.php" class="btn-logout">Logout</a>
+                <a href="<?php echo BASE_URL; ?>/logout.php" class="btn-logout">Logout</a>
             </div>
         </nav>
 
@@ -29,9 +34,9 @@
                 <div class="nav-section">
                     <h3>Quick Access</h3>
                     <ul class="nav-list">
-                        <li><a href="/CANCER/index.php?page=doctor-dashboard" class="nav-link">Dashboard</a></li>
-                        <li><a href="/CANCER/index.php?page=patient-assessment" class="nav-link">New Assessment</a></li>
-                        <li><a href="/CANCER/index.php?page=patient-search" class="nav-link active">Patient History</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/index.php?page=doctor-dashboard" class="nav-link">Dashboard</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/index.php?page=patient-assessment" class="nav-link">New Assessment</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/index.php?page=patient-search" class="nav-link active">Patient History</a></li>
                     </ul>
                 </div>
             </aside>
@@ -103,7 +108,7 @@
                                                 <strong><?php echo number_format($assessment['risk_score'] ?? 0, 1); ?>/100</strong>
                                             </td>
                                             <td>
-                                                <a href="/CANCER/index.php?page=assessment-results&id=<?php echo $assessment['id']; ?>" class="link-action">
+                                                <a href="<?php echo BASE_URL; ?>/index.php?page=assessment-results&id=<?php echo $assessment['id']; ?>" class="link-action">
                                                     View Details
                                                 </a>
                                             </td>

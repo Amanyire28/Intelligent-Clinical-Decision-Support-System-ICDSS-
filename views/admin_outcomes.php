@@ -3,6 +3,9 @@
  * ADMIN OUTCOMES MANAGEMENT VIEW
  * Record patient diagnosis, treatment, and follow-up outcomes
  */
+if (!defined('BASE_URL')) {
+    require_once __DIR__ . '/../config/db_config.php';
+}
 ?>
 
 <!DOCTYPE html>
@@ -11,7 +14,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Patient Outcomes - ICDSS</title>
-    <link rel="stylesheet" href="/CANCER/assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/style.css">
 </head>
 <body>
     <div class="container-fluid">
@@ -26,7 +29,7 @@
                 <span class="user-info">
                     Welcome, <strong><?php echo htmlspecialchars($current_user['full_name'] ?? 'Admin'); ?></strong>
                 </span>
-                <a href="/CANCER/logout.php" class="btn-logout">Logout</a>
+                <a href="<?php echo BASE_URL; ?>/logout.php" class="btn-logout">Logout</a>
             </div>
         </nav>
 
@@ -36,10 +39,10 @@
                 <div class="nav-section">
                     <h3>Admin Menu</h3>
                     <ul class="nav-list">
-                        <li><a href="/CANCER/index.php?page=admin-dashboard" class="nav-link">Dashboard</a></li>
-                        <li><a href="/CANCER/index.php?page=admin-users" class="nav-link">User Management</a></li>
-                        <li><a href="/CANCER/index.php?page=admin-assessments" class="nav-link">Assessments</a></li>
-                        <li><a href="/CANCER/index.php?page=admin-outcomes" class="nav-link active">Outcomes</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/index.php?page=admin-dashboard" class="nav-link">Dashboard</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/index.php?page=admin-users" class="nav-link">User Management</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/index.php?page=admin-assessments" class="nav-link">Assessments</a></li>
+                        <li><a href="<?php echo BASE_URL; ?>/index.php?page=admin-outcomes" class="nav-link active">Outcomes</a></li>
                     </ul>
                 </div>
             </aside>
@@ -158,7 +161,7 @@
                 <h3>Record Patient Outcome</h3>
                 <span class="modal-close" onclick="closeOutcomeModal()">&times;</span>
             </div>
-            <form id="outcomeForm" method="POST" action="/CANCER/index.php?page=api-outcome-action">
+            <form id="outcomeForm" method="POST" action="<?php echo BASE_URL; ?>/index.php?page=api-outcome-action">
                 <input type="hidden" name="action" value="record">
                 <input type="hidden" name="assessment_id" id="outcomeAssessmentId" value="">
 
@@ -337,6 +340,6 @@
         });
     </script>
 
-    <link rel="stylesheet" href="/CANCER/assets/css/modal.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/modal.css">
 </body>
 </html>

@@ -1,10 +1,15 @@
+<?php
+if (!defined('BASE_URL')) {
+    require_once __DIR__ . '/../config/db_config.php';
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - ICDSS Throat Cancer Risk Assessment</title>
-    <link rel="stylesheet" href="/CANCER/assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/style.css">
 </head>
 <body class="login-page">
     <div class="login-container">
@@ -23,7 +28,7 @@
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="/CANCER/auth.php" class="login-form" id="loginForm">
+            <form method="POST" action="<?php echo BASE_URL; ?>/auth.php" class="login-form" id="loginForm">
                 <div class="form-group">
                     <label for="username" class="form-label">Username or Email:</label>
                     <input 
